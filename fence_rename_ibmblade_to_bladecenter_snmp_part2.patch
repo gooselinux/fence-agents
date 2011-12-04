@@ -1,0 +1,39 @@
+commit dc30d915f9d676ce9df02006ef490cd64425d9d0
+Author: Fabio M. Di Nitto <fdinitto@redhat.com>
+Date:   Wed Jul 21 09:11:44 2010 +0200
+
+    fence agents: add compatibility symlink for ibmblade / bladecenter_snmp
+    
+    Resolves: rhbz#616559
+    
+    Signed-off-by: Fabio M. Di Nitto <fdinitto@redhat.com>
+
+diff --git a/fence/agents/ibmblade/Makefile b/fence/agents/ibmblade/Makefile
+new file mode 100644
+index 0000000..208ee4b
+--- /dev/null
++++ b/fence/agents/ibmblade/Makefile
+@@ -0,0 +1,16 @@
++include ../../../make/defines.mk
++
++TARGET = fence_ibmblade
++MANTARGET = $(TARGET).8
++SBINSYMT = $(TARGET)
++
++all: $(TARGET)
++
++include $(OBJDIR)/make/install.mk
++include $(OBJDIR)/make/uninstall.mk
++include $(OBJDIR)/make/clean.mk
++
++$(TARGET):
++	ln -sf fence_bladecenter_snmp $@
++
++clean: generalclean
+diff --git a/fence/agents/ibmblade/fence_ibmblade.8 b/fence/agents/ibmblade/fence_ibmblade.8
+new file mode 100644
+index 0000000..f6f7888
+--- /dev/null
++++ b/fence/agents/ibmblade/fence_ibmblade.8
+@@ -0,0 +1 @@
++.so man8/fence_bladecenter_snmp.8

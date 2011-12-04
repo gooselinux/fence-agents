@@ -1,0 +1,28 @@
+From 6dd191b5a8044c60caba7109b77583b04823bd30 Mon Sep 17 00:00:00 2001
+From: Marek 'marx' Grac <mgrac@redhat.com>
+Date: Wed, 19 May 2010 16:25:25 +0200
+Subject: [PATCH] fence_wti: Add direct support for WTI VMR
+
+Add a new command prompt for WTI VMR devices
+
+Resolves: rhbz#578617
+---
+ fence/agents/wti/fence_wti.py |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/fence/agents/wti/fence_wti.py b/fence/agents/wti/fence_wti.py
+index bc25f26..81c0ab9 100644
+--- a/fence/agents/wti/fence_wti.py
++++ b/fence/agents/wti/fence_wti.py
+@@ -87,7 +87,7 @@ def main():
+ 	## Fence agent specific defaults
+ 	#####
+ 	if 0 == options.has_key("-c"):
+-		options["-c"] = [ "RSM>", "MPC>", "IPS>", "TPS>", "NBB>", "NPS>" ]
++		options["-c"] = [ "RSM>", "MPC>", "IPS>", "TPS>", "NBB>", "NPS>", "VMR>" ]
+ 
+ 	docs = { }
+ 	docs["shortdesc"] = "Fence agent for WTI"
+-- 
+1.5.5.6
+

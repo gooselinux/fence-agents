@@ -1,0 +1,28 @@
+From 734c1956e16c5afc6ac5f265e9b3ed396f9e4201 Mon Sep 17 00:00:00 2001
+From: Ryan O'Hara <rohara@redhat.com>
+Date: Tue, 10 Aug 2010 11:55:53 -0500
+Subject: [PATCH] Fix syntax error in code that opens logfile.
+
+rhbz#608887
+
+Signed-off-by: Ryan O'Hara <rohara@redhat.com>
+---
+ fence/agents/scsi/fence_scsi.pl |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/fence/agents/scsi/fence_scsi.pl b/fence/agents/scsi/fence_scsi.pl
+index 992a3eb..9ee8917 100644
+--- a/fence/agents/scsi/fence_scsi.pl
++++ b/fence/agents/scsi/fence_scsi.pl
+@@ -583,7 +583,7 @@ else {
+ ## and redirect STDOUT and STDERR to the logfile.
+ ##
+ if (defined $opt_f) {
+-    open (LOG, >">$opt_f") or die "$!\n";
++    open (LOG, ">>$opt_f") or die "$!\n";
+     open (STDOUT, ">&LOG");
+     open (STDERR, ">&LOG");
+ }
+-- 
+1.7.2
+

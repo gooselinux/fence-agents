@@ -1,0 +1,28 @@
+From 3d36ee013e11043800214f400fae6a6bebd2af41 Mon Sep 17 00:00:00 2001
+From: Ryan O'Hara <rohara@redhat.com>
+Date: Mon, 28 Jun 2010 15:59:27 -0500
+Subject: [PATCH] Fix open flags so that logfile won't be truncated each time we open it.
+
+rhbz#608887
+
+Signed-off-by: Ryan O'Hara <rohara@redhat.com>
+---
+ fence/agents/scsi/fence_scsi.pl |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/fence/agents/scsi/fence_scsi.pl b/fence/agents/scsi/fence_scsi.pl
+index 59259cf..992a3eb 100644
+--- a/fence/agents/scsi/fence_scsi.pl
++++ b/fence/agents/scsi/fence_scsi.pl
+@@ -583,7 +583,7 @@ else {
+ ## and redirect STDOUT and STDERR to the logfile.
+ ##
+ if (defined $opt_f) {
+-    open (LOG, ">$opt_f") or die "$!\n";
++    open (LOG, >">$opt_f") or die "$!\n";
+     open (STDOUT, ">&LOG");
+     open (STDERR, ">&LOG");
+ }
+-- 
+1.6.2.5
+

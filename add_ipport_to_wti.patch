@@ -1,0 +1,35 @@
+commit 713884260072bfd1118fb5c29bac7196d7a17e75
+Author: Marek 'marx' Grac <mgrac@redhat.com>
+Date:   Fri Jun 18 16:26:57 2010 +0200
+
+    fence_wti: support non-default TCP ports
+    
+    WTI do not use standard process to login so it needs special patch
+    (based on the code in library)
+    
+    Resolves: rhbz#593726
+
+diff --git a/fence/agents/wti/fence_wti.py b/fence/agents/wti/fence_wti.py
+index 81c0ab9..a71852a 100644
+--- a/fence/agents/wti/fence_wti.py
++++ b/fence/agents/wti/fence_wti.py
+@@ -76,7 +76,7 @@ def main():
+ 	device_opt = [  "help", "version", "agent", "quiet", "verbose", "debug",
+ 			"action", "ipaddr", "login", "passwd", "passwd_script",
+ 			"cmd_prompt", "secure", "identity_file", "port", "no_login", "no_password",
+-			"test", "separator", "inet4_only", "inet6_only",
++			"test", "separator", "inet4_only", "inet6_only", "ipport",
+ 			"power_timeout", "shell_timeout", "login_timeout", "power_wait" ]
+ 
+ 	atexit.register(atexit_handler)
+@@ -107,7 +107,9 @@ is running because the connection will block any necessary fencing actions."
+ 	if 0 == options.has_key("-x"):
+ 		try:
+ 			try:
+-				conn = fspawn('%s %s' % (TELNET_PATH, options["-a"]))
++				conn = fspawn(TELNET_PATH)
++				conn.send("set binary\n")
++				conn.send("open %s -%s\n"%(options["-a"], options["-u"]))
+ 			except pexpect.ExceptionPexpect, ex:
+ 				sys.stderr.write(str(ex) + "\n")
+ 				sys.stderr.write("Due to limitations, binary dependencies on fence agents "

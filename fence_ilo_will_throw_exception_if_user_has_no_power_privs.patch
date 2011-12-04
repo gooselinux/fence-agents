@@ -1,0 +1,30 @@
+commit 6477f54d3c8e2647677661f374db97c2f264c2f4
+Author: Marek 'marx' Grac <mgrac@redhat.com>
+Date:   Fri Jul 16 10:39:53 2010 +0200
+
+    fence_ilo: will throw exception if user does not have power priviledges
+    
+    User will receive error message instead of python traceback
+    
+    Patch by Shane Bradley
+    
+    Resolves: rhbz#615255
+
+diff --git a/fence/agents/ilo/fence_ilo.py b/fence/agents/ilo/fence_ilo.py
+index b68f4e4..f70dc9c 100755
+--- a/fence/agents/ilo/fence_ilo.py
++++ b/fence/agents/ilo/fence_ilo.py
+@@ -26,7 +26,12 @@ def get_power_status(conn, options):
+ 		" PASSWORD = \"" + options["-p"] + "\">\r\n")
+ 	conn.send("<SERVER_INFO MODE = \"read\"><GET_HOST_POWER_STATUS/>\r\n")
+ 	conn.send("</SERVER_INFO></LOGIN>\r\n")
+-	conn.log_expect(options, "HOST_POWER=\"(.*?)\"", int(options["-g"]))
++	try:
++		conn.log_expect(options, "HOST_POWER=\"(.*?)\"", int(options["-g"]))
++	except pexpect.EOF, e:
++		fail(EC_STATUS)
++	except pexpect.TIMEOUT, e:
++		fail(EC_TIMED_OUT)
+ 
+ 	status = conn.match.group(1)
+ 	return status.lower().strip()
