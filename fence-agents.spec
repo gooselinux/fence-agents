@@ -16,7 +16,7 @@
 Name: fence-agents
 Summary: Fence Agents for Red Hat Cluster
 Version: 3.0.12
-Release: 8%{?alphatag:.%{alphatag}}%{?dist}.2
+Release: 8%{?alphatag:.%{alphatag}}%{?dist}.3
 License: GPLv2+ and LGPLv2+
 Group: System Environment/Base
 URL: http://sources.redhat.com/cluster/wiki/
@@ -37,7 +37,7 @@ Patch10: fence-agents-Add-power_wait-to-fence_ipmilan.patch
 ExclusiveArch: i686 x86_64
 
 # shipped agents
-%global supportedagents apc apc_snmp bladecenter bladecenter_snmp cisco_mds drac drac5 eps ibmblade ifmib ilo ilo_mp intelmodular ipmilan manual rhevm rsb scsi wti
+%global supportedagents apc apc_snmp bladecenter bladecenter_snmp brocade cisco_mds drac drac5 eps ibmblade ifmib ilo ilo_mp intelmodular ipmilan manual rhevm rsb scsi wti
 %global deprecated ibmblade rsa sanbox2
 %global testagents virsh vmware
 %global requiresthirdparty egenera
@@ -122,6 +122,11 @@ power management for several devices.
 %{_mandir}/man8/fence*
 
 %changelog
+* Fri Feb 25 2011 Fabio M. Di Nitto <fdinitto@redhat.com> - 3.0.12-8.el6_0.3
+- Ship fence_brocade again
+  (spec file change only)
+  Resolves: rhbz#680522
+
 * Thu Oct 15 2010 Marek Grac <mgrac@redhat.com> - 3.0.12-8.el6_0.2
 - Support for ilo3 devices using fence_ipmilan
   (fence-agents-Add-power_wait-to-fence_ipmilan.patch)
