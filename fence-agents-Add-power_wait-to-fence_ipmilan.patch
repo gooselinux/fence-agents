@@ -1,0 +1,155 @@
+From 4028b11dcac119463e1f2d8195e6e36e0cc9c3b6 Mon Sep 17 00:00:00 2001
+From: Marek 'marx' Grac <mgrac@redhat.com>
+Date: Thu, 14 Oct 2010 21:53:07 +0200
+Subject: [PATCH] fence-agents: Add power_wait to fence_ipmilan
+
+Previous patch used power-wait which was inconsistent with
+the rest of the fencing agents.  Also, help information
+for the new option was missing.
+
+Resolves: rhbz#642671
+
+Signed-off-by: Lon Hohberger <lhh@redhat.com>
+Signed-off-by: Shane Bradley <sbradley@redhat.com>
+---
+ fence/agents/ipmilan/ipmilan.c |   26 +++++++++++++++++++++++---
+ 1 files changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/fence/agents/ipmilan/ipmilan.c b/fence/agents/ipmilan/ipmilan.c
+index 58a86c9..beffdb6 100644
+--- a/fence/agents/ipmilan/ipmilan.c
++++ b/fence/agents/ipmilan/ipmilan.c
+@@ -28,6 +28,7 @@
+ #define ST_CYCLE 4
+ 
+ #define DEFAULT_TIMEOUT 20
++#define DEFAULT_POWER_WAIT 2
+ 
+ #define DEFAULT_METHOD "onoff"
+ 
+@@ -78,6 +79,7 @@ struct ipmi {
+ 	int i_verbose;
+ 	int i_lanplus;
+ 	int i_timeout;
++	int i_power_wait;
+ 	int i_cipher;
+ };
+ 
+@@ -166,6 +168,7 @@ struct xml_parameter_s xml_parameters[]={
+   {"timeout","-t",0,"string",NULL,"Timeout (sec) for IPMI operation"},
+   {"cipher","-C",0,"string",NULL,"Ciphersuite to use (same as ipmitool -C parameter)"},
+   {"method","-M",0,"string",DEFAULT_METHOD,"Method to fence (onoff or cycle)"},
++  {"power_wait","-T",0,"string","2","Wait X seconds after on/off operation"},
+   {"verbose","-v",0,"boolean",NULL,"Verbose mode"}};
+ 
+ /*
+@@ -485,7 +488,7 @@ ipmi_on(struct ipmi *ipmi)
+ 		if (ret != 0)
+ 			return ret;
+ 
+-		sleep(2);
++		sleep(ipmi->i_power_wait);
+ 		--retries;
+ 		ret = ipmi_op(ipmi, ST_STATUS, power_status);
+ 
+@@ -548,6 +551,7 @@ ipmi_destroy(struct ipmi *i)
+ static struct ipmi *
+ ipmi_init(struct ipmi *i, char *host, char *authtype,
+ 	  char *user, char *password, int lanplus, int verbose,int timeout,
++	  int power_wait,
+ 	  int cipher)
+ {
+ 	const char *p;
+@@ -620,6 +624,7 @@ ipmi_init(struct ipmi *i, char *host, char *authtype,
+ 	i->i_verbose = verbose;
+ 	i->i_lanplus = lanplus;
+ 	i->i_timeout = timeout;
++	i->i_power_wait = power_wait;
+ 	i->i_cipher = cipher;
+ 
+ 	return i;
+@@ -684,6 +689,7 @@ get_options_stdin(char *ip, size_t iplen,
+ 		  char *user, size_t userlen,
+ 		  char *op, size_t oplen,
+ 		  int *lanplus, int *verbose,int *timeout,
++		  int *power_wait,
+ 	          int *cipher, char *method, int methodlen)
+ {
+ 	char in[256];
+@@ -751,6 +757,10 @@ get_options_stdin(char *ip, size_t iplen,
+ 			if ((sscanf(val,"%d",timeout)!=1) || *timeout<1) {
+ 			    *timeout=DEFAULT_TIMEOUT;
+ 			}
++		} else if (!strcasecmp(name,"power_wait")) {
++			if ((sscanf(val,"%d",power_wait)!=1) || *power_wait<1) {
++			    *power_wait=DEFAULT_POWER_WAIT;
++			}
+ 		} else if (!strcasecmp(name,"cipher")) {
+ 			if ((sscanf(val,"%d",cipher)!=1) || *cipher<0) {
+ 			    *cipher=-1;
+@@ -797,6 +807,7 @@ printf("   -l <login>     Username/Login (if required) to control power\n"
+ printf("   -o <op>        Operation to perform.\n");
+ printf("                  Valid operations: on, off, reboot, status, list or monitor\n");
+ printf("   -t <timeout>   Timeout (sec) for IPMI operation (default %d)\n",DEFAULT_TIMEOUT);
++printf("   -T <timeout>   Wait X seconds after on/off operation\n");
+ printf("   -C <cipher>    Ciphersuite to use (same as ipmitool -C parameter)\n");
+ printf("   -M <method>    Method to fence (onoff or cycle (default %s)\n", DEFAULT_METHOD);
+ printf("   -V             Print version and exit\n");
+@@ -813,6 +824,7 @@ printf("   option=<op>           Same as -o\n");
+ printf("   operation=<op>        Same as -o\n");
+ printf("   action=<op>           Same as -o\n");
+ printf("   timeout=<timeout>     Same as -t\n");
++printf("   power_wait=<time>     Same as -T\n");
+ printf("   cipher=<cipher>       Same as -C\n");
+ printf("   method=<method>       Same as -M\n");
+ printf("   verbose               Same as -v\n\n");
+@@ -880,6 +892,7 @@ main(int argc, char **argv)
+ 	char *pname = basename(argv[0]);
+ 	struct ipmi *i;
+ 	int timeout=DEFAULT_TIMEOUT;
++	int down_sleep=DEFAULT_POWER_WAIT;
+ 	int cipher=-1;
+ 	int print_final_status=1;
+ 	int translated_ret = -1;
+@@ -895,7 +908,7 @@ main(int argc, char **argv)
+ 		/*
+ 		   Parse command line options if any were specified
+ 		 */
+-		while ((opt = getopt(argc, argv, "A:a:i:l:p:S:Po:vV?hHt:C:M:")) != EOF) {
++		while ((opt = getopt(argc, argv, "A:a:i:l:p:S:Po:vV?hHt:T:C:M:")) != EOF) {
+ 			switch(opt) {
+ 			case 'A':
+ 				/* Auth type */
+@@ -931,6 +944,12 @@ main(int argc, char **argv)
+ 				    fail_exit("Timeout option expects positive number parameter");
+ 				}
+ 				break;
++			case 'T':
++				/* Shutdown Sleep Time */
++				if ((sscanf(optarg,"%d",&down_sleep)!=1) || down_sleep<1) {
++				    fail_exit("Shutdown time option expects positive number parameter");
++				}
++				break;
+ 			case 'C':
+ 				/* Ciphersuite */
+ 				if ((sscanf(optarg,"%d",&cipher)!=1) || cipher<0) {
+@@ -965,6 +984,7 @@ main(int argc, char **argv)
+ 					  pwd_script, sizeof(pwd_script),
+ 				      user, sizeof(user),
+ 				      op, sizeof(op), &lanplus, &verbose,&timeout,
++				      &down_sleep,
+ 				      &cipher, method, sizeof(method)) != 0)
+ 			return 1;
+ 	}
+@@ -1037,7 +1057,7 @@ main(int argc, char **argv)
+ 	}
+ 
+ 	/* Ok, set up the IPMI struct */
+-	i = ipmi_init(NULL, ip, authtype, user, passwd, lanplus, verbose, timeout, cipher);
++	i = ipmi_init(NULL, ip, authtype, user, passwd, lanplus, verbose, timeout, down_sleep, cipher);
+ 	if (!i)
+ 		fail_exit("Failed to initialize\n");
+ 
+-- 
+1.6.0.6
+

@@ -16,7 +16,7 @@
 Name: fence-agents
 Summary: Fence Agents for Red Hat Cluster
 Version: 3.0.12
-Release: 8%{?alphatag:.%{alphatag}}%{?dist}
+Release: 8%{?alphatag:.%{alphatag}}%{?dist}.2
 License: GPLv2+ and LGPLv2+
 Group: System Environment/Base
 URL: http://sources.redhat.com/cluster/wiki/
@@ -31,11 +31,13 @@ Patch5: fence_ilo_will_throw_exception_if_user_has_no_power_privs.patch
 Patch6: fence_rename_ibmblade_to_bladecenter_snmp_part1.patch
 Patch7: fence_rename_ibmblade_to_bladecenter_snmp_part2.patch
 Patch8: fix_syntax_error_in_code_that_opens_logfile.patch
+Patch9: fence_rhevm.patch
+Patch10: fence-agents-Add-power_wait-to-fence_ipmilan.patch
 
 ExclusiveArch: i686 x86_64
 
 # shipped agents
-%global supportedagents apc apc_snmp bladecenter bladecenter_snmp cisco_mds drac drac5 eps ibmblade ifmib ilo ilo_mp intelmodular ipmilan manual rsb scsi wti
+%global supportedagents apc apc_snmp bladecenter bladecenter_snmp cisco_mds drac drac5 eps ibmblade ifmib ilo ilo_mp intelmodular ipmilan manual rhevm rsb scsi wti
 %global deprecated ibmblade rsa sanbox2
 %global testagents virsh vmware
 %global requiresthirdparty egenera
@@ -43,7 +45,7 @@ ExclusiveArch: i686 x86_64
 ## Runtime deps
 Requires: sg3_utils telnet openssh-clients
 Requires: pexpect net-snmp-utils
-Requires: perl-Net-Telnet
+Requires: perl-Net-Telnet python-pycurl
 
 # This is required by fence_virsh. Per discussion on fedora-devel
 # switching from package to file based require.
@@ -66,6 +68,7 @@ BuildRequires: libxslt pexpect
 BuildRequires: clusterlib-devel >= 3.0.0
 BuildRequires: corosynclib-devel >= 1.2.0-1
 BuildRequires: openaislib-devel >= 1.1.1-1
+BuildRequires: python-pycurl
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -78,6 +81,8 @@ BuildRequires: openaislib-devel >= 1.1.1-1
 %patch6 -p1 -b .fence_rename_ibmblade_to_bladecenter_snmp_part1
 %patch7 -p1 -b .fence_rename_ibmblade_to_bladecenter_snmp_part2
 %patch8 -p1 -b .fix_syntax_error_in_code_that_opens_logfile
+%patch9 -p1 -b .fence_rhevm
+%patch10 -p1 -b .fence-agents-Add-power_wait-to-fence_ipmilan
 
 # we inherit configure from cluster project. Configure it for vars we need.
 # building from source directly without those parameters will NOT work.
@@ -117,6 +122,16 @@ power management for several devices.
 %{_mandir}/man8/fence*
 
 %changelog
+* Thu Oct 15 2010 Marek Grac <mgrac@redhat.com> - 3.0.12-8.el6_0.2
+- Support for ilo3 devices using fence_ipmilan
+  (fence-agents-Add-power_wait-to-fence_ipmilan.patch)
+  Resolves: rhbz#643340
+
+* Thu Oct 14 2010 Marek Grac <mgrac@redhat.com> - 3.0.12-8.el6_0.1
+- Provide fence-rhev agent that uses the RHEV REST API
+  (fence_rhevm.patch)
+  Resolves: rhbz#642695
+
 * Tue Aug 10 2010 Lon Hohberger <lhh@redhat.com> - Version: 3.0.12-8
 - Fix syntax error in code that opens logfile.
   (fix_syntax_error_in_code_that_opens_logfile.patch)
